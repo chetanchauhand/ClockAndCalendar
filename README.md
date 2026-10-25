@@ -4,12 +4,11 @@ A simple and responsive web project that displays the current Indian Standard Ti
 
 ## Project Preview
 
-![India Time & Calendar](screenshot.png)
-
+ https://chetanchauhand.github.io/ClockAndCalendar/
 ##  Features
 
 -  Real-time Indian Standard Time
-- 🇮🇳 Delhi, India • IST
+-  🇮🇳 Delhi, India • IST
 -  Interactive monthly calendar
 -  Direct year selection
 -  Indian festivals and important days
@@ -29,10 +28,10 @@ A simple and responsive web project that displays the current Indian Standard Ti
 
 ##  Project Structure
 
-```text
 India-Time-Calendar/
 │
 ├── index.html
 ├── style.css
 ├── script.js
-└── screenshot.png
+└── festival-data.js
+

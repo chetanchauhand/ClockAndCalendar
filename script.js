@@ -1,1757 +1,648 @@
 /* =====================================================
-   INDIA LIVE CLOCK + FESTIVAL CALENDAR
-   JAVASCRIPT ONLY
+   India Time & Calendar
 
-   Important:
-   Indian time is always calculated using:
+   Needs festival-data.js loaded first (offline fallback).
 
-       Asia/Kolkata
-
-   The user's computer timezone is NOT used for
-   displaying the clock.
+   APIs
+   1) Time:     worldtimeapi.org      free, no key
+   2) Holidays: calendarific.com      free key, 500 calls/month
    ===================================================== */
 
-
-/* =====================================================
-   CONSTANTS
-   ===================================================== */
-
-const INDIA_TIME_ZONE = "Asia/Kolkata";
-
-
-/* =====================================================
-   MONTH AND DAY NAMES
-   ===================================================== */
-
-const MONTH_NAMES = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December"
-];
-
-
-const WEEKDAY_NAMES = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday"
-];
-
-
-/* =====================================================
-   FESTIVAL DATA
-
-   Structure:
-
-   year
-      month
-         date
-            festival objects
-
-   Date format:
-   YYYY-MM-DD
-
-   Festival dates that move from year to year are
-   stored separately for each year.
-
-   Islamic dates are approximate because they can
-   depend on lunar observation.
-   ===================================================== */
-
-const festivalData = {
-
-    /* =================================================
-       2025
-       ================================================= */
-
-    "2025-01-13": [
-        {
-            name: "Lohri",
-            type: "Other",
-            description:
-                "A popular winter festival celebrated especially in Punjab and northern India."
-        }
-    ],
-
-    "2025-01-14": [
-        {
-            name: "Makar Sankranti",
-            type: "Hindu",
-            description:
-                "A major solar festival marking the Sun's transition into Makara."
-        },
-        {
-            name: "Pongal",
-            type: "Hindu",
-            description:
-                "A harvest festival celebrated mainly in Tamil Nadu."
-        }
-    ],
-
-    "2025-01-26": [
-        {
-            name: "Republic Day",
-            type: "National",
-            description:
-                "India celebrates the adoption of its Constitution on 26 January 1950."
-        }
-    ],
-
-    "2025-02-26": [
-        {
-            name: "Maha Shivaratri",
-            type: "Hindu",
-            description:
-                "A major Hindu festival dedicated to Lord Shiva."
-        }
-    ],
-
-    "2025-03-14": [
-        {
-            name: "Holi",
-            type: "Hindu",
-            description:
-                "The festival of colours, celebrating joy, spring and the triumph of good over evil."
-        }
-    ],
-
-    "2025-03-31": [
-        {
-            name: "Eid al-Fitr",
-            type: "Muslim",
-            description:
-                "Festival marking the end of Ramadan. The date can vary with lunar observation."
-        }
-    ],
-
-    "2025-04-06": [
-        {
-            name: "Rama Navami",
-            type: "Hindu",
-            description:
-                "Celebrates the birth of Lord Rama."
-        }
-    ],
-
-    "2025-04-10": [
-        {
-            name: "Mahavir Jayanti",
-            type: "Other",
-            description:
-                "Jain festival commemorating the birth of Lord Mahavira."
-        }
-    ],
-
-    "2025-04-13": [
-        {
-            name: "Baisakhi",
-            type: "Sikh",
-            description:
-                "Important Sikh and harvest festival, especially significant in Punjab."
-        }
-    ],
-
-    "2025-05-12": [
-        {
-            name: "Buddha Purnima",
-            type: "Other",
-            description:
-                "A Buddhist festival associated with the birth, enlightenment and passing of Gautama Buddha."
-        }
-    ],
-
-    "2025-06-07": [
-        {
-            name: "Eid al-Adha / Bakrid",
-            type: "Muslim",
-            description:
-                "An important Islamic festival commemorating the spirit of sacrifice."
-        }
-    ],
-
-    "2025-07-06": [
-        {
-            name: "Muharram / Ashura",
-            type: "Muslim",
-            description:
-                "An important day in the Islamic calendar. Observances vary among Muslim communities."
-        }
-    ],
-
-    "2025-08-09": [
-        {
-            name: "Raksha Bandhan",
-            type: "Hindu",
-            description:
-                "A festival celebrating the bond between brothers and sisters."
-        }
-    ],
-
-    "2025-08-15": [
-        {
-            name: "Independence Day",
-            type: "National",
-            description:
-                "India celebrates independence from British rule on 15 August 1947."
-        }
-    ],
-
-    "2025-08-16": [
-        {
-            name: "Janmashtami",
-            type: "Hindu",
-            description:
-                "Celebrates the birth of Lord Krishna."
-        }
-    ],
-
-    "2025-08-27": [
-        {
-            name: "Ganesh Chaturthi",
-            type: "Hindu",
-            description:
-                "Celebrates the birth of Lord Ganesha."
-        }
-    ],
-
-    "2025-09-05": [
-        {
-            name: "Onam",
-            type: "Other",
-            description:
-                "Major harvest festival of Kerala."
-        },
-        {
-            name: "Milad un-Nabi",
-            type: "Muslim",
-            description:
-                "Observance marking the birth of Prophet Muhammad. Date can vary with lunar observation."
-        }
-    ],
-
-    "2025-09-22": [
-        {
-            name: "Sharad Navratri Begins",
-            type: "Hindu",
-            description:
-                "Beginning of the nine-night Navratri festival dedicated to the worship of Goddess Durga."
-        }
-    ],
-
-    "2025-10-02": [
-        {
-            name: "Gandhi Jayanti",
-            type: "National",
-            description:
-                "Birth anniversary of Mahatma Gandhi."
-        },
-        {
-            name: "Dussehra",
-            type: "Hindu",
-            description:
-                "Festival symbolizing the victory of good over evil."
-        }
-    ],
-
-    "2025-10-20": [
-        {
-            name: "Diwali",
-            type: "Hindu",
-            description:
-                "The festival of lights, celebrated with lamps, prayers and family gatherings."
-        }
-    ],
-
-    "2025-11-05": [
-        {
-            name: "Guru Nanak Jayanti",
-            type: "Sikh",
-            description:
-                "Celebrates the birth anniversary of Guru Nanak Dev Ji, the first Sikh Guru."
-        }
-    ],
-
-    "2025-12-25": [
-        {
-            name: "Christmas",
-            type: "Christian",
-            description:
-                "Christian festival celebrating the birth of Jesus Christ."
-        }
-    ],
-
-
-    /* =================================================
-       2026
-       ================================================= */
-
-    "2026-01-01": [
-        {
-            name: "New Year's Day",
-            type: "Other",
-            description:
-                "The first day of the Gregorian calendar year."
-        }
-    ],
-
-    "2026-01-13": [
-        {
-            name: "Lohri",
-            type: "Other",
-            description:
-                "A popular winter festival celebrated especially in Punjab and northern India."
-        }
-    ],
-
-    "2026-01-14": [
-        {
-            name: "Makar Sankranti",
-            type: "Hindu",
-            description:
-                "A major solar festival marking the Sun's transition into Makara."
-        },
-        {
-            name: "Pongal",
-            type: "Hindu",
-            description:
-                "A harvest festival celebrated mainly in Tamil Nadu."
-        }
-    ],
-
-    "2026-01-26": [
-        {
-            name: "Republic Day",
-            type: "National",
-            description:
-                "India celebrates the adoption of its Constitution on 26 January 1950."
-        }
-    ],
-
-    "2026-02-15": [
-        {
-            name: "Maha Shivaratri",
-            type: "Hindu",
-            description:
-                "A major Hindu festival dedicated to Lord Shiva."
-        }
-    ],
-
-    "2026-03-04": [
-        {
-            name: "Holi",
-            type: "Hindu",
-            description:
-                "The festival of colours, celebrating joy, spring and the triumph of good over evil."
-        }
-    ],
-
-    "2026-03-21": [
-        {
-            name: "Eid al-Fitr",
-            type: "Muslim",
-            description:
-                "Festival marking the end of Ramadan. The date can vary with lunar observation."
-        }
-    ],
-
-    "2026-03-26": [
-        {
-            name: "Rama Navami",
-            type: "Hindu",
-            description:
-                "Celebrates the birth of Lord Rama."
-        }
-    ],
-
-    "2026-03-31": [
-        {
-            name: "Mahavir Jayanti",
-            type: "Other",
-            description:
-                "Jain festival commemorating the birth of Lord Mahavira."
-        }
-    ],
-
-    "2026-04-03": [
-        {
-            name: "Good Friday",
-            type: "Christian",
-            description:
-                "Christian observance commemorating the crucifixion of Jesus Christ."
-        }
-    ],
-
-    "2026-04-05": [
-        {
-            name: "Easter",
-            type: "Christian",
-            description:
-                "Christian festival celebrating the resurrection of Jesus Christ."
-        }
-    ],
-
-    "2026-04-14": [
-        {
-            name: "Baisakhi",
-            type: "Sikh",
-            description:
-                "Important Sikh and harvest festival, especially significant in Punjab."
-        },
-        {
-            name: "Ambedkar Jayanti",
-            type: "National",
-            description:
-                "Birth anniversary of Dr. B. R. Ambedkar."
-        }
-    ],
-
-    "2026-05-01": [
-        {
-            name: "Buddha Purnima",
-            type: "Other",
-            description:
-                "A Buddhist festival associated with Gautama Buddha."
-        }
-    ],
-
-    "2026-05-28": [
-        {
-            name: "Eid al-Adha / Bakrid",
-            type: "Muslim",
-            description:
-                "An important Islamic festival commemorating the spirit of sacrifice."
-        }
-    ],
-
-    "2026-06-26": [
-        {
-            name: "Muharram / Ashura",
-            type: "Muslim",
-            description:
-                "An important day in the Islamic calendar. Observances vary among Muslim communities."
-        }
-    ],
-
-    "2026-07-16": [
-        {
-            name: "Rath Yatra",
-            type: "Hindu",
-            description:
-                "A major chariot festival associated especially with Lord Jagannath."
-        }
-    ],
-
-    "2026-08-15": [
-        {
-            name: "Independence Day",
-            type: "National",
-            description:
-                "India celebrates independence from British rule on 15 August 1947."
-        }
-    ],
-
-    "2026-08-26": [
-        {
-            name: "Onam",
-            type: "Other",
-            description:
-                "Major harvest festival of Kerala."
-        },
-        {
-            name: "Milad un-Nabi",
-            type: "Muslim",
-            description:
-                "Observance marking the birth of Prophet Muhammad. Date can vary with lunar observation."
-        }
-    ],
-
-    "2026-08-28": [
-        {
-            name: "Raksha Bandhan",
-            type: "Hindu",
-            description:
-                "A festival celebrating the bond between brothers and sisters."
-        }
-    ],
-
-    "2026-09-04": [
-        {
-            name: "Janmashtami",
-            type: "Hindu",
-            description:
-                "Celebrates the birth of Lord Krishna."
-        }
-    ],
-
-    "2026-09-14": [
-        {
-            name: "Ganesh Chaturthi",
-            type: "Hindu",
-            description:
-                "Celebrates the birth of Lord Ganesha."
-        }
-    ],
-
-    "2026-10-02": [
-        {
-            name: "Gandhi Jayanti",
-            type: "National",
-            description:
-                "Birth anniversary of Mahatma Gandhi."
-        }
-    ],
-
-    "2026-10-11": [
-        {
-            name: "Sharad Navratri Begins",
-            type: "Hindu",
-            description:
-                "Beginning of the nine-night Navratri festival."
-        }
-    ],
-
-    "2026-10-20": [
-        {
-            name: "Dussehra",
-            type: "Hindu",
-            description:
-                "Festival symbolizing the victory of good over evil."
-        }
-    ],
-
-    "2026-11-08": [
-        {
-            name: "Diwali",
-            type: "Hindu",
-            description:
-                "The festival of lights, celebrated with lamps, prayers and family gatherings."
-        }
-    ],
-
-    "2026-11-24": [
-        {
-            name: "Guru Nanak Jayanti",
-            type: "Sikh",
-            description:
-                "Celebrates the birth anniversary of Guru Nanak Dev Ji."
-        }
-    ],
-
-    "2026-12-25": [
-        {
-            name: "Christmas",
-            type: "Christian",
-            description:
-                "Christian festival celebrating the birth of Jesus Christ."
-        }
-    ],
-
-
-    /* =================================================
-       2027
-       ================================================= */
-
-    "2027-01-01": [
-        {
-            name: "New Year's Day",
-            type: "Other",
-            description:
-                "The first day of the Gregorian calendar year."
-        }
-    ],
-
-    "2027-01-14": [
-        {
-            name: "Lohri",
-            type: "Other",
-            description:
-                "A popular winter festival celebrated especially in Punjab and northern India."
-        }
-    ],
-
-    "2027-01-15": [
-        {
-            name: "Makar Sankranti",
-            type: "Hindu",
-            description:
-                "A major solar festival marking the Sun's transition into Makara."
-        },
-        {
-            name: "Pongal",
-            type: "Hindu",
-            description:
-                "A harvest festival celebrated mainly in Tamil Nadu."
-        }
-    ],
-
-    "2027-01-26": [
-        {
-            name: "Republic Day",
-            type: "National",
-            description:
-                "India celebrates the adoption of its Constitution on 26 January 1950."
-        }
-    ],
-
-    "2027-03-06": [
-        {
-            name: "Maha Shivaratri",
-            type: "Hindu",
-            description:
-                "A major Hindu festival dedicated to Lord Shiva."
-        }
-    ],
-
-    "2027-03-10": [
-        {
-            name: "Eid al-Fitr",
-            type: "Muslim",
-            description:
-                "Festival marking the end of Ramadan. Islamic dates are subject to lunar observation."
-        }
-    ],
-
-    "2027-03-22": [
-        {
-            name: "Holi",
-            type: "Hindu",
-            description:
-                "The festival of colours, celebrating joy, spring and the triumph of good over evil."
-        }
-    ],
-
-    "2027-04-14": [
-        {
-            name: "Baisakhi",
-            type: "Sikh",
-            description:
-                "Important Sikh and harvest festival, especially significant in Punjab."
-        },
-        {
-            name: "Ambedkar Jayanti",
-            type: "National",
-            description:
-                "Birth anniversary of Dr. B. R. Ambedkar."
-        }
-    ],
-
-    "2027-04-15": [
-        {
-            name: "Rama Navami",
-            type: "Hindu",
-            description:
-                "Celebrates the birth of Lord Rama."
-        }
-    ],
-
-    "2027-04-19": [
-        {
-            name: "Mahavir Jayanti",
-            type: "Other",
-            description:
-                "Jain festival commemorating the birth of Lord Mahavira."
-        }
-    ],
-
-    "2027-05-20": [
-        {
-            name: "Buddha Purnima",
-            type: "Other",
-            description:
-                "A Buddhist festival associated with Gautama Buddha."
-        }
-    ],
-
-    "2027-06-16": [
-        {
-            name: "Muharram / Ashura",
-            type: "Muslim",
-            description:
-                "An important day in the Islamic calendar. Date may vary according to lunar observation."
-        }
-    ],
-
-    "2027-06-18": [
-        {
-            name: "Raksha Bandhan",
-            type: "Hindu",
-            description:
-                "A festival celebrating the bond between brothers and sisters."
-        }
-    ],
-
-    "2027-06-26": [
-        {
-            name: "Janmashtami",
-            type: "Hindu",
-            description:
-                "Celebrates the birth of Lord Krishna."
-        }
-    ],
-
-    "2027-07-06": [
-        {
-            name: "Ganesh Chaturthi",
-            type: "Hindu",
-            description:
-                "Celebrates the birth of Lord Ganesha."
-        }
-    ],
-
-    "2027-08-06": [
-        {
-            name: "Eid al-Fitr",
-            type: "Muslim",
-            description:
-                "Festival marking the end of Ramadan. Date is subject to lunar observation."
-        }
-    ],
-
-    "2027-08-15": [
-        {
-            name: "Independence Day",
-            type: "National",
-            description:
-                "India celebrates independence from British rule on 15 August 1947."
-        },
-        {
-            name: "Milad un-Nabi",
-            type: "Muslim",
-            description:
-                "Observance marking the birth of Prophet Muhammad."
-        }
-    ],
-
-    "2027-09-12": [
-        {
-            name: "Onam",
-            type: "Other",
-            description:
-                "Major harvest festival of Kerala."
-        }
-    ],
-
-    "2027-10-02": [
-        {
-            name: "Gandhi Jayanti",
-            type: "National",
-            description:
-                "Birth anniversary of Mahatma Gandhi."
-        }
-    ],
-
-    "2027-10-09": [
-        {
-            name: "Dussehra",
-            type: "Hindu",
-            description:
-                "Festival symbolizing the victory of good over evil."
-        }
-    ],
-
-    "2027-10-29": [
-        {
-            name: "Diwali",
-            type: "Hindu",
-            description:
-                "The festival of lights, celebrated with lamps, prayers and family gatherings."
-        }
-    ],
-
-    "2027-11-14": [
-        {
-            name: "Guru Nanak Jayanti",
-            type: "Sikh",
-            description:
-                "Celebrates the birth anniversary of Guru Nanak Dev Ji."
-        }
-    ],
-
-    "2027-12-25": [
-        {
-            name: "Christmas",
-            type: "Christian",
-            description:
-                "Christian festival celebrating the birth of Jesus Christ."
-        }
-    ]
+"use strict";
+
+/* ---------- Settings ---------- */
+
+const CONFIG = {
+    TIME_ZONE: "Asia/Kolkata",
+
+    // Paste your Calendarific key between the quotes.
+    // Leave empty to use only the built-in festival list.
+    // A key in browser code can be read by anyone who opens the page.
+    // For a public site, call the API from your own server instead.
+    CALENDARIFIC_API_KEY: "",
+
+    TIME_API_URL: "https://worldtimeapi.org/api/timezone/Asia/Kolkata",
+    HOLIDAY_API_URL: "https://calendarific.com/api/v2/holidays",
+
+    TIME_RESYNC_MS: 10 * 60 * 1000,
+    HOLIDAY_CACHE_MS: 7 * 24 * 60 * 60 * 1000,
+    REQUEST_TIMEOUT_MS: 8000,
+    UPCOMING_COUNT: 4
+};
+
+const MONTHS_EN = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"];
+
+const MONTHS_HI = ["जनवरी", "फ़रवरी", "मार्च", "अप्रैल", "मई", "जून",
+    "जुलाई", "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर"];
+
+const WEEKDAYS_EN = ["Sunday", "Monday", "Tuesday", "Wednesday",
+    "Thursday", "Friday", "Saturday"];
+
+const WEEKDAYS_HI = ["रविवार", "सोमवार", "मंगलवार", "बुधवार",
+    "गुरुवार", "शुक्रवार", "शनिवार"];
+
+const CATEGORY_COLORS = {
+    hindu: "var(--c-hindu)",
+    muslim: "var(--c-muslim)",
+    sikh: "var(--c-sikh)",
+    christian: "var(--c-christian)",
+    national: "var(--c-national)",
+    other: "var(--c-other)"
+};
+
+
+/* ---------- Page elements ---------- */
+
+const $ = id => document.getElementById(id);
+
+const el = {
+    digits: $("digits"),
+    meridiem: $("meridiem"),
+    todayHindi: $("todayHindi"),
+    todayEnglish: $("todayEnglish"),
+    timeStatus: $("timeStatus"),
+    holidayStatus: $("holidayStatus"),
+
+    sheet: $("sheet"),
+    sheetMonth: $("sheetMonth"),
+    sheetYear: $("sheetYear"),
+    sheetDay: $("sheetDay"),
+    sheetWeekdayEn: $("sheetWeekdayEn"),
+    sheetWeekdayHi: $("sheetWeekdayHi"),
+    sheetRelative: $("sheetRelative"),
+    festivalContent: $("festivalContent"),
+
+    calendarMonth: $("calendarMonth"),
+    calendarYear: $("calendarYear"),
+    calendarMonthHi: $("calendarMonthHi"),
+    grid: $("calendarGrid"),
+    prev: $("previousMonth"),
+    next: $("nextMonth"),
+    todayButton: $("todayButton"),
+
+    upcomingList: $("upcomingList")
 };
 
 
 /* =====================================================
-   DOM ELEMENTS
+   Network helper
    ===================================================== */
 
-const digitalClock =
-    document.getElementById("digitalClock");
+async function fetchJSON(url) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), CONFIG.REQUEST_TIMEOUT_MS);
 
-const ampm =
-    document.getElementById("ampm");
+    try {
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        return await response.json();
+    } finally {
+        clearTimeout(timer);
+    }
+}
 
-const currentDay =
-    document.getElementById("currentDay");
-
-const currentDate =
-    document.getElementById("currentDate");
-
-const currentMonth =
-    document.getElementById("currentMonth");
-
-const currentYear =
-    document.getElementById("currentYear");
-
-const fullIndianDate =
-    document.getElementById("fullIndianDate");
-
-const calendarGrid =
-    document.getElementById("calendarGrid");
-
-const calendarMonth =
-    document.getElementById("calendarMonth");
-
-const calendarYear =
-    document.getElementById("calendarYear");
-
-const selectedDateTitle =
-    document.getElementById("selectedDateTitle");
-
-const selectedDayNumber =
-    document.getElementById("selectedDayNumber");
-
-const selectedWeekday =
-    document.getElementById("selectedWeekday");
-
-const selectedFullDate =
-    document.getElementById("selectedFullDate");
-
-const festivalContent =
-    document.getElementById("festivalContent");
-
-const previousMonth =
-    document.getElementById("previousMonth");
-
-const nextMonth =
-    document.getElementById("nextMonth");
-
-const todayButton =
-    document.getElementById("todayButton");
+function setStatus(node, text, state) {
+    node.textContent = text;
+    node.dataset.state = state;
+}
 
 
 /* =====================================================
-   INDIAN TIME FUNCTIONS
+   Time API
    ===================================================== */
 
-/*
-    This function gets the current date/time using
-    Asia/Kolkata.
+let clockOffsetMs = 0;   // real time minus device time
 
-    Important:
-    Date.now() represents the current instant.
+function nowIST() {
+    return new Date(Date.now() + clockOffsetMs);
+}
 
-    Intl.DateTimeFormat converts that instant into
-    Indian calendar/time values.
+async function syncTime() {
+    try {
+        const sentAt = Date.now();
+        const data = await fetchJSON(CONFIG.TIME_API_URL);
+        const receivedAt = Date.now();
 
-    The user's computer timezone is NOT used.
-*/
+        if (typeof data.unixtime !== "number") throw new Error("Bad response");
 
-function getIndianDateParts() {
+        // The API reports whole seconds, so add half a second on average,
+        // and assume the reply took half the round trip to reach us.
+        const serverNow = data.unixtime * 1000 + 500;
+        const deviceNow = (sentAt + receivedAt) / 2;
+        clockOffsetMs = serverNow - deviceNow;
 
-    const formatter =
-        new Intl.DateTimeFormat(
-            "en-IN",
-            {
-                timeZone: INDIA_TIME_ZONE,
-
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-
-                hourCycle: "h23"
-            }
+        const drift = Math.round(Math.abs(clockOffsetMs) / 1000);
+        setStatus(
+            el.timeStatus,
+            drift > 2 ? `Time synced, your device was ${drift}s off` : "Time synced with server",
+            "ok"
         );
+    } catch (error) {
+        clockOffsetMs = 0;
+        setStatus(el.timeStatus, "Using device clock, time server unreachable", "warn");
+    }
+}
 
 
-    const parts =
-        formatter.formatToParts(new Date());
+/* =====================================================
+   IST formatting
+   ===================================================== */
+
+const clockFormat = new Intl.DateTimeFormat("en-IN", {
+    timeZone: CONFIG.TIME_ZONE,
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true
+});
+
+const dateFormat = new Intl.DateTimeFormat("en-IN", {
+    timeZone: CONFIG.TIME_ZONE,
+    year: "numeric", month: "2-digit", day: "2-digit"
+});
+
+function part(parts, type) {
+    const found = parts.find(p => p.type === type);
+    return found ? found.value : "";
+}
+
+function makeKey(year, month, day) {
+    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function parseKey(key) {
+    const [year, month, day] = key.split("-").map(Number);
+    return { year, month, day };
+}
+
+function todayParts() {
+    const p = dateFormat.formatToParts(nowIST());
+    return {
+        year: Number(part(p, "year")),
+        month: Number(part(p, "month")),
+        day: Number(part(p, "day"))
+    };
+}
+
+function todayKey() {
+    const t = todayParts();
+    return makeKey(t.year, t.month, t.day);
+}
+
+function weekdayOf(key) {
+    const { year, month, day } = parseKey(key);
+    return new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+}
+
+function daysFromToday(key) {
+    const a = parseKey(todayKey());
+    const b = parseKey(key);
+    return Math.round(
+        (Date.UTC(b.year, b.month - 1, b.day) - Date.UTC(a.year, a.month - 1, a.day)) / 86400000
+    );
+}
+
+function addDays(key, n) {
+    const { year, month, day } = parseKey(key);
+    const d = new Date(Date.UTC(year, month - 1, day + n));
+    return makeKey(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate());
+}
+
+function relativeText(key) {
+    const n = daysFromToday(key);
+    if (n === 0) return "Today";
+    if (n === 1) return "Tomorrow";
+    if (n === -1) return "Yesterday";
+    return n > 0 ? `In ${n} days` : `${-n} days ago`;
+}
 
 
-    const result = {};
+/* =====================================================
+   Live clock
+   ===================================================== */
 
+// Build the digit boxes once, then only change their text.
+const digitNodes = [];
 
-    parts.forEach(part => {
+(function buildDigits() {
+    el.digits.textContent = "";
+    "00:00:00".split("").forEach(ch => {
+        const span = document.createElement("span");
+        span.textContent = ch;
+        if (ch === ":") span.className = "colon";
+        el.digits.appendChild(span);
+        digitNodes.push(span);
+    });
+})();
 
-        if (part.type !== "literal") {
+let lastDayKey = "";
 
-            result[part.type] =
-                Number(part.value);
+function tick() {
+    const now = nowIST();
+    const p = clockFormat.formatToParts(now);
+
+    const text = `${part(p, "hour")}:${part(p, "minute")}:${part(p, "second")}`;
+    text.split("").forEach((ch, i) => {
+        if (digitNodes[i] && digitNodes[i].textContent !== ch) {
+            digitNodes[i].textContent = ch;
         }
-
     });
 
+    el.meridiem.textContent = part(p, "dayPeriod").toUpperCase();
 
-    return result;
+    const key = todayKey();
+    if (key !== lastDayKey) {
+        lastDayKey = key;
+        paintClockDate(key);
+        renderMonth();          // moves the "today" marker at midnight
+        renderUpcoming();
+    }
 }
 
+function paintClockDate(key) {
+    const { year, month, day } = parseKey(key);
+    const wd = weekdayOf(key);
 
-/*
-    Get Indian date string:
-
-    Example:
-
-    2026-09-14
-*/
-
-function getIndianDateKey() {
-
-    const parts =
-        getIndianDateParts();
-
-
-    return (
-        parts.year +
-        "-" +
-        String(parts.month).padStart(2, "0") +
-        "-" +
-        String(parts.day).padStart(2, "0")
-    );
+    el.todayHindi.textContent = `${WEEKDAYS_HI[wd]}, ${day} ${MONTHS_HI[month - 1]} ${year}`;
+    el.todayEnglish.textContent = `${WEEKDAYS_EN[wd]}, ${day} ${MONTHS_EN[month - 1]} ${year}`;
 }
 
 
 /* =====================================================
-   LIVE CLOCK
+   Holiday data: API, cache, fallback
    ===================================================== */
 
-function updateIndianClock() {
+const apiFestivals = {};            // date -> [festival]
+const loadedYears = new Set();
+const pendingYears = new Map();
 
-    /*
-        First get the current instant.
-        Then format it specifically for India.
-    */
+const fallbackFestivals = {};       // date -> [festival]
+FALLBACK_FESTIVALS.forEach(([date, name, type, description]) => {
+    (fallbackFestivals[date] = fallbackFestivals[date] || []).push({ name, type, description });
+});
 
-    const now = new Date();
+function categorize(name, apiTypes) {
+    const n = name.toLowerCase();
+    const t = (apiTypes || []).join(" ").toLowerCase();
 
+    if (/eid|ramzan|ramadan|muharram|ashura|milad|bakrid|shab-e/.test(n)) return "Muslim";
+    if (/christmas|easter|good friday|palm sunday|ash wednesday/.test(n)) return "Christian";
+    if (/guru|gurpurab|baisakhi|vaisakhi|nanak|gobind|sikh/.test(n)) return "Sikh";
+    if (/republic day|independence day|gandhi|ambedkar|unity day/.test(n) || t.includes("national")) return "National";
+    if (/diwali|deepavali|holi|dussehra|navratri|durga|ganesh|janmashtami|krishna|rama|shivaratri|raksha|sankranti|pongal|dhanteras|bhai dooj|karva|chhath|ugadi|gudi|rath yatra|hanuman|vasant|maha/.test(n)) return "Hindu";
+    return "Other";
+}
 
-    const timeFormatter =
-        new Intl.DateTimeFormat(
-            "en-IN",
-            {
-                timeZone: INDIA_TIME_ZONE,
+function readCache(year) {
+    try {
+        const raw = localStorage.getItem("india_holidays_" + year);
+        if (!raw) return null;
+        const saved = JSON.parse(raw);
+        return Date.now() - saved.savedAt < CONFIG.HOLIDAY_CACHE_MS ? saved.data : null;
+    } catch (e) {
+        return null;
+    }
+}
 
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
+function writeCache(year, data) {
+    try {
+        localStorage.setItem("india_holidays_" + year, JSON.stringify({ savedAt: Date.now(), data }));
+    } catch (e) { /* storage blocked or full: fine */ }
+}
 
-                hour12: true
-            }
-        );
+function keepYear(year, byDate) {
+    Object.assign(apiFestivals, byDate);
+    loadedYears.add(year);
+}
 
+function loadYear(year) {
+    if (loadedYears.has(year)) return Promise.resolve();
+    if (pendingYears.has(year)) return pendingYears.get(year);
 
-    const timeParts =
-        timeFormatter.formatToParts(now);
-
-
-    let hour = "";
-    let minute = "";
-    let second = "";
-    let dayPeriod = "";
-
-
-    timeParts.forEach(part => {
-
-        if (part.type === "hour") {
-            hour = part.value;
+    const job = (async () => {
+        const cached = readCache(year);
+        if (cached) {
+            keepYear(year, cached);
+            setStatus(el.holidayStatus, "Festivals loaded from saved copy", "ok");
+            return;
         }
 
-        if (part.type === "minute") {
-            minute = part.value;
+        if (!CONFIG.CALENDARIFIC_API_KEY) {
+            setStatus(el.holidayStatus, "Built-in festival list, no API key set", "off");
+            return;
         }
 
-        if (part.type === "second") {
-            second = part.value;
+        try {
+            setStatus(el.holidayStatus, "Loading festivals", "warn");
+
+            const url = `${CONFIG.HOLIDAY_API_URL}?api_key=${encodeURIComponent(CONFIG.CALENDARIFIC_API_KEY)}&country=IN&year=${year}`;
+            const json = await fetchJSON(url);
+            const list = json && json.response && json.response.holidays;
+            if (!Array.isArray(list)) throw new Error("Bad response");
+
+            const byDate = {};
+            list.forEach(h => {
+                const date = String(h.date && h.date.iso).slice(0, 10);
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+
+                const bucket = (byDate[date] = byDate[date] || []);
+                if (bucket.some(x => x.name === h.name)) return;
+
+                bucket.push({
+                    name: h.name,
+                    type: categorize(h.name, h.type),
+                    description: h.description || "Holiday or observance in India."
+                });
+            });
+
+            writeCache(year, byDate);
+            keepYear(year, byDate);
+            setStatus(el.holidayStatus, "Festivals loaded from API", "ok");
+        } catch (error) {
+            setStatus(el.holidayStatus, "Holiday API failed, showing built-in list", "warn");
         }
+    })().finally(() => pendingYears.delete(year));
 
-        if (part.type === "dayPeriod") {
-            dayPeriod = part.value.toUpperCase();
-        }
+    pendingYears.set(year, job);
+    return job;
+}
 
-    });
+function getFestivals(key) {
+    const year = Number(key.slice(0, 4));
+    if (loadedYears.has(year)) return apiFestivals[key] || [];
+    return fallbackFestivals[key] || [];
+}
 
-
-    digitalClock.textContent =
-        `${hour}:${minute}:${second}`;
-
-
-    ampm.textContent =
-        dayPeriod;
-
-
-    /*
-        Get Indian date parts.
-    */
-
-    const indianParts =
-        getIndianDateParts();
-
-
-    currentDate.textContent =
-        String(indianParts.day).padStart(2, "0");
-
-
-    currentYear.textContent =
-        indianParts.year;
-
-
-    /*
-        Get Indian weekday and month names.
-    */
-
-    const dateFormatter =
-        new Intl.DateTimeFormat(
-            "en-IN",
-            {
-                timeZone: INDIA_TIME_ZONE,
-
-                weekday: "long",
-                month: "long"
-            }
-        );
-
-
-    const dateParts =
-        dateFormatter.formatToParts(now);
-
-
-    let weekday = "";
-    let month = "";
-
-
-    dateParts.forEach(part => {
-
-        if (part.type === "weekday") {
-            weekday = part.value;
-        }
-
-        if (part.type === "month") {
-            month = part.value;
-        }
-
-    });
-
-
-    currentDay.textContent =
-        weekday;
-
-    currentMonth.textContent =
-        month;
-
-
-    /*
-        Complete Indian date.
-    */
-
-    const fullDateFormatter =
-        new Intl.DateTimeFormat(
-            "en-IN",
-            {
-                timeZone: INDIA_TIME_ZONE,
-
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-                year: "numeric"
-            }
-        );
-
-
-    fullIndianDate.textContent =
-        fullDateFormatter.format(now) +
-        " • IST";
+function isRedDay(key) {
+    return weekdayOf(key) === 0 || getFestivals(key).some(f => f.type === "National");
 }
 
 
 /* =====================================================
-   CALENDAR STATE
+   State
    ===================================================== */
 
-let indianNow =
-    getIndianDateParts();
+const startParts = todayParts();
 
-
-/*
-    The calendar initially opens on the current
-    Indian month/year.
-*/
-
-let calendarDisplayDate =
-    new Date(
-        indianNow.year,
-        indianNow.month - 1,
-        1
-    );
-
-
-/*
-    The selected date initially becomes today's
-    Indian date.
-*/
-
-let selectedDateKey =
-    getIndianDateKey();
+let viewYear = startParts.year;
+let viewMonth = startParts.month - 1;      // 0 to 11
+let selectedKey = makeKey(startParts.year, startParts.month, startParts.day);
 
 
 /* =====================================================
-   DATE HELPERS
+   Month grid
    ===================================================== */
 
+function renderMonth() {
+    el.calendarMonth.textContent = MONTHS_EN[viewMonth];
+    el.calendarYear.textContent = viewYear;
+    el.calendarMonthHi.textContent = MONTHS_HI[viewMonth];
 
-/*
-    Returns:
+    el.grid.textContent = "";
 
-    YYYY-MM-DD
-*/
+    const firstWeekday = new Date(Date.UTC(viewYear, viewMonth, 1)).getUTCDay();
+    const daysInMonth = new Date(Date.UTC(viewYear, viewMonth + 1, 0)).getUTCDate();
+    const today = todayKey();
 
-function makeDateKey(year, month, day) {
-
-    return (
-        year +
-        "-" +
-        String(month).padStart(2, "0") +
-        "-" +
-        String(day).padStart(2, "0")
-    );
-}
-
-
-/*
-    Get festival list for a date.
-*/
-
-function getFestivals(dateKey) {
-
-    return festivalData[dateKey] || [];
-}
-
-
-/*
-    Get number of days in a month.
-
-    JavaScript correctly handles leap years here.
-
-    Example:
-
-    February 2028 -> 29
-    February 2027 -> 28
-*/
-
-function getDaysInMonth(year, month) {
-
-    return new Date(
-        year,
-        month + 1,
-        0
-    ).getDate();
-}
-
-
-/*
-    Get weekday.
-
-    0 = Sunday
-    1 = Monday
-    ...
-    6 = Saturday
-*/
-
-function getFirstWeekday(year, month) {
-
-    return new Date(
-        year,
-        month,
-        1
-    ).getDay();
-}
-
-
-/* =====================================================
-   RENDER CALENDAR
-   ===================================================== */
-
-function renderCalendar() {
-
-    const year =
-        calendarDisplayDate.getFullYear();
-
-    const month =
-        calendarDisplayDate.getMonth();
-
-
-    /*
-        Update month/year heading.
-    */
-
-    calendarMonth.textContent =
-        MONTH_NAMES[month];
-
-    calendarYear.textContent =
-        year;
-
-
-    /*
-        Clear old calendar.
-    */
-
-    calendarGrid.innerHTML = "";
-
-
-    /*
-        First weekday of month.
-    */
-
-    const firstDay =
-        getFirstWeekday(year, month);
-
-
-    /*
-        Total days.
-    */
-
-    const daysInMonth =
-        getDaysInMonth(year, month);
-
-
-    /*
-        Add empty boxes before day 1.
-    */
-
-    for (
-        let i = 0;
-        i < firstDay;
-        i++
-    ) {
-
-        const emptyDay =
-            document.createElement("div");
-
-        emptyDay.className =
-            "calendar-day empty";
-
-        calendarGrid.appendChild(
-            emptyDay
-        );
+    for (let i = 0; i < firstWeekday; i++) {
+        const blank = document.createElement("div");
+        blank.className = "day blank";
+        blank.setAttribute("aria-hidden", "true");
+        el.grid.appendChild(blank);
     }
 
+    for (let day = 1; day <= daysInMonth; day++) {
+        const key = makeKey(viewYear, viewMonth + 1, day);
+        const festivals = getFestivals(key);
 
-    /*
-        Create actual dates.
-    */
+        const cell = document.createElement("button");
+        cell.type = "button";
+        cell.className = "day";
+        if (key === today) cell.classList.add("today");
+        if (key === selectedKey) cell.classList.add("selected");
+        if (isRedDay(key)) cell.classList.add("red");
 
-    for (
-        let day = 1;
-        day <= daysInMonth;
-        day++
-    ) {
+        const num = document.createElement("span");
+        num.className = "num";
+        num.textContent = day;
+        cell.appendChild(num);
 
-        const dateKey =
-            makeDateKey(
-                year,
-                month + 1,
-                day
-            );
+        let label = `${day} ${MONTHS_EN[viewMonth]} ${viewYear}`;
 
+        if (festivals.length) {
+            const dots = document.createElement("div");
+            dots.className = "dots";
 
-        const dayElement =
-            document.createElement("div");
+            [...new Set(festivals.map(f => f.type.toLowerCase()))].slice(0, 3).forEach(type => {
+                const dot = document.createElement("i");
+                dot.className = "c-" + type;
+                dots.appendChild(dot);
+            });
+            cell.appendChild(dots);
 
+            const name = document.createElement("span");
+            name.className = "name";
+            name.textContent = festivals[0].name;
+            cell.appendChild(name);
 
-        dayElement.className =
-            "calendar-day";
-
-
-        /*
-            Today's Indian date.
-        */
-
-        if (
-            dateKey ===
-            getIndianDateKey()
-        ) {
-
-            dayElement.classList.add(
-                "today"
-            );
+            label += ": " + festivals.map(f => f.name).join(", ");
         }
 
-
-        /*
-            Currently selected date.
-        */
-
-        if (
-            dateKey ===
-            selectedDateKey
-        ) {
-
-            dayElement.classList.add(
-                "selected-date"
-            );
-        }
-
-
-        /*
-            Date number.
-        */
-
-        const numberElement =
-            document.createElement("span");
-
-
-        numberElement.className =
-            "day-number";
-
-
-        numberElement.textContent =
-            day;
-
-
-        dayElement.appendChild(
-            numberElement
-        );
-
-
-        /*
-            Festivals on this date.
-        */
-
-        const festivals =
-            getFestivals(dateKey);
-
-
-        if (festivals.length > 0) {
-
-            const dot =
-                document.createElement("div");
-
-
-            dot.className =
-                "calendar-festival-dot";
-
-
-            dayElement.appendChild(dot);
-
-
-            /*
-                Show first festival name
-                on larger screens.
-            */
-
-            const festivalName =
-                document.createElement("span");
-
-
-            festivalName.className =
-                "festival-name-small";
-
-
-            festivalName.textContent =
-                festivals[0].name;
-
-
-            dayElement.appendChild(
-                festivalName
-            );
-        }
-
-
-        /*
-            Click date.
-        */
-
-        dayElement.addEventListener(
-            "click",
-            function () {
-
-                selectedDateKey =
-                    dateKey;
-
-                renderCalendar();
-
-                showSelectedDate(
-                    dateKey
-                );
-            }
-        );
-
-
-        calendarGrid.appendChild(
-            dayElement
-        );
-    }
-
-
-    /*
-        Fill remaining cells so the last row
-        keeps a clean 7-column structure.
-    */
-
-    const totalCells =
-        firstDay + daysInMonth;
-
-    const remaining =
-        (7 - (totalCells % 7)) % 7;
-
-
-    for (
-        let i = 0;
-        i < remaining;
-        i++
-    ) {
-
-        const emptyDay =
-            document.createElement("div");
-
-        emptyDay.className =
-            "calendar-day empty";
-
-        calendarGrid.appendChild(
-            emptyDay
-        );
+        cell.setAttribute("aria-label", label);
+        cell.addEventListener("click", () => selectDate(key));
+        el.grid.appendChild(cell);
     }
 }
 
 
 /* =====================================================
-   SELECTED DATE INFORMATION
+   Tear-off sheet
    ===================================================== */
 
-function showSelectedDate(dateKey) {
+function renderSheet(animate) {
+    const { year, month, day } = parseKey(selectedKey);
+    const wd = weekdayOf(selectedKey);
 
-    const parts =
-        dateKey.split("-");
+    el.sheetMonth.textContent = MONTHS_EN[month - 1];
+    el.sheetYear.textContent = year;
+    el.sheetDay.textContent = day;
+    el.sheetDay.classList.toggle("is-red", isRedDay(selectedKey));
+    el.sheetWeekdayEn.textContent = WEEKDAYS_EN[wd];
+    el.sheetWeekdayHi.textContent = WEEKDAYS_HI[wd];
+    el.sheetRelative.textContent = relativeText(selectedKey);
 
+    el.festivalContent.textContent = "";
+    const festivals = getFestivals(selectedKey);
 
-    const year =
-        Number(parts[0]);
+    if (!festivals.length) {
+        const none = document.createElement("p");
+        none.className = "no-festival";
+        none.textContent = "No festival or public holiday on this date.";
+        el.festivalContent.appendChild(none);
+    } else {
+        festivals.forEach(f => {
+            const box = document.createElement("div");
+            box.className = "festival";
+            box.style.setProperty("--cat", CATEGORY_COLORS[f.type.toLowerCase()] || CATEGORY_COLORS.other);
 
-    const month =
-        Number(parts[1]);
+            const title = document.createElement("h3");
+            title.textContent = f.name;
 
-    const day =
-        Number(parts[2]);
+            const tag = document.createElement("span");
+            tag.className = "tag";
+            tag.textContent = f.type;
 
+            const text = document.createElement("p");
+            text.textContent = f.description;
 
-    /*
-        JavaScript Date is used here only for calculating
-        the weekday of the selected calendar date.
-
-        It is NOT used for displaying current Indian time.
-    */
-
-    const date =
-        new Date(
-            year,
-            month - 1,
-            day
-        );
-
-
-    const weekday =
-        WEEKDAY_NAMES[
-            date.getDay()
-        ];
-
-
-    const monthName =
-        MONTH_NAMES[
-            month - 1
-        ];
-
-
-    /*
-        Update selected date panel.
-    */
-
-    selectedDateTitle.textContent =
-        `${monthName} ${year}`;
-
-
-    selectedDayNumber.textContent =
-        day;
-
-
-    selectedWeekday.textContent =
-        weekday;
-
-
-    selectedFullDate.textContent =
-        `${day} ${monthName} ${year}`;
-
-
-    /*
-        Get festivals.
-    */
-
-    const festivals =
-        getFestivals(dateKey);
-
-
-    /*
-        No festival.
-    */
-
-    if (festivals.length === 0) {
-
-        festivalContent.innerHTML = `
-
-            <div class="empty-state">
-
-                <span>🌿</span>
-
-                <p>
-                    No major festival/occasion
-                    listed for this date.
-                </p>
-
-            </div>
-
-        `;
-
-        return;
+            box.append(title, tag, text);
+            el.festivalContent.appendChild(box);
+        });
     }
 
-
-    /*
-        Create festival cards.
-    */
-
-    festivalContent.innerHTML =
-        "";
-
-
-    festivals.forEach(
-        festival => {
-
-            const item =
-                document.createElement(
-                    "div"
-                );
+    if (animate) {
+        el.sheet.classList.remove("turn");
+        void el.sheet.offsetWidth;          // restart the animation
+        el.sheet.classList.add("turn");
+    }
+}
 
 
-            item.className =
-                "festival-item";
+/* =====================================================
+   Upcoming festivals
+   ===================================================== */
 
+function renderUpcoming() {
+    el.upcomingList.textContent = "";
 
-            item.innerHTML = `
+    const start = todayKey();
+    let shown = 0;
 
-                <h4>
-                    ${festival.name}
-                </h4>
+    for (let i = 0; i < 300 && shown < CONFIG.UPCOMING_COUNT; i++) {
+        const key = addDays(start, i);
 
-                <div class="festival-meta">
+        for (const f of getFestivals(key)) {
+            if (shown >= CONFIG.UPCOMING_COUNT) break;
 
-                    <span class="festival-tag">
-                        ${festival.type}
-                    </span>
+            const { year, month, day } = parseKey(key);
 
-                    <span class="festival-date">
-                        ${day} ${monthName} ${year}
-                    </span>
+            const item = document.createElement("li");
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "upcoming-item";
+            button.style.setProperty("--cat", CATEGORY_COLORS[f.type.toLowerCase()] || CATEGORY_COLORS.other);
 
-                </div>
+            const name = document.createElement("strong");
+            name.textContent = f.name;
 
-                <p>
-                    ${festival.description}
-                </p>
+            const date = document.createElement("span");
+            date.textContent = `${WEEKDAYS_EN[weekdayOf(key)]}, ${day} ${MONTHS_EN[month - 1]} ${year}`;
 
-            `;
+            const when = document.createElement("span");
+            when.className = "when";
+            when.textContent = relativeText(key);
 
+            button.append(name, date, when);
+            button.addEventListener("click", () => {
+                selectDate(key);
+                el.sheet.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            });
 
-            festivalContent.appendChild(
-                item
-            );
+            item.appendChild(button);
+            el.upcomingList.appendChild(item);
+            shown++;
         }
-    );
+    }
+
+    if (!shown) {
+        const none = document.createElement("li");
+        none.textContent = "No upcoming festivals found.";
+        el.upcomingList.appendChild(none);
+    }
 }
 
 
 /* =====================================================
-   MONTH NAVIGATION
+   Actions
    ===================================================== */
 
-previousMonth.addEventListener(
-    "click",
-    function () {
+async function showMonth(year, month) {
+    viewYear = year;
+    viewMonth = month;
+    renderMonth();
 
-        calendarDisplayDate.setMonth(
-            calendarDisplayDate.getMonth() - 1
-        );
-
-        renderCalendar();
-
-        /*
-            Select first day of displayed month
-            after navigation.
-        */
-
-        const year =
-            calendarDisplayDate.getFullYear();
-
-        const month =
-            calendarDisplayDate.getMonth() + 1;
-
-
-        const firstDate =
-            makeDateKey(
-                year,
-                month,
-                1
-            );
-
-
-        selectedDateKey =
-            firstDate;
-
-        showSelectedDate(
-            firstDate
-        );
+    // If that year's API data was not loaded yet, load it and redraw.
+    if (!loadedYears.has(year)) {
+        await loadYear(year);
+        if (viewYear === year) {
+            renderMonth();
+            renderSheet(false);
+            renderUpcoming();
+        }
     }
-);
-
-
-nextMonth.addEventListener(
-    "click",
-    function () {
-
-        calendarDisplayDate.setMonth(
-            calendarDisplayDate.getMonth() + 1
-        );
-
-        renderCalendar();
-
-
-        const year =
-            calendarDisplayDate.getFullYear();
-
-        const month =
-            calendarDisplayDate.getMonth() + 1;
-
-
-        const firstDate =
-            makeDateKey(
-                year,
-                month,
-                1
-            );
-
-
-        selectedDateKey =
-            firstDate;
-
-        showSelectedDate(
-            firstDate
-        );
-    }
-);
-
-
-/* =====================================================
-   TODAY BUTTON
-   ===================================================== */
-
-todayButton.addEventListener(
-    "click",
-    function () {
-
-        /*
-            Get TODAY again using Indian timezone.
-        */
-
-        const indianParts =
-            getIndianDateParts();
-
-
-        calendarDisplayDate =
-            new Date(
-                indianParts.year,
-                indianParts.month - 1,
-                1
-            );
-
-
-        selectedDateKey =
-            makeDateKey(
-                indianParts.year,
-                indianParts.month,
-                indianParts.day
-            );
-
-
-        renderCalendar();
-
-        showSelectedDate(
-            selectedDateKey
-        );
-    }
-);
-
-
-/* =====================================================
-   INITIALIZE
-   ===================================================== */
-
-function initializeWebsite() {
-
-    /*
-        Start clock immediately.
-    */
-
-    updateIndianClock();
-
-
-    /*
-        Update clock every second.
-    */
-
-    setInterval(
-        updateIndianClock,
-        1000
-    );
-
-
-    /*
-        Draw calendar.
-    */
-
-    renderCalendar();
-
-
-    /*
-        Show today's information.
-    */
-
-    showSelectedDate(
-        selectedDateKey
-    );
 }
 
+function selectDate(key) {
+    selectedKey = key;
+    const { year, month } = parseKey(key);
 
-/*
-    Start the website.
-*/
+    if (year !== viewYear || month - 1 !== viewMonth) {
+        showMonth(year, month - 1);
+    } else {
+        renderMonth();
+    }
+    renderSheet(true);
+}
 
-initializeWebsite();
+function shiftMonth(delta) {
+    const d = new Date(Date.UTC(viewYear, viewMonth + delta, 1));
+    const year = d.getUTCFullYear();
+    const month = d.getUTCMonth();
+
+    selectedKey = makeKey(year, month + 1, 1);
+    showMonth(year, month);
+    renderSheet(true);
+}
+
+el.prev.addEventListener("click", () => shiftMonth(-1));
+el.next.addEventListener("click", () => shiftMonth(1));
+
+el.todayButton.addEventListener("click", () => selectDate(todayKey()));
+
+
+/* =====================================================
+   Start
+   ===================================================== */
+
+async function start() {
+    // Show the page immediately with the built-in data.
+    tick();
+    setInterval(tick, 1000);
+    renderMonth();
+    renderSheet(false);
+    renderUpcoming();
+
+    // Then improve it as the APIs answer. Next year is loaded too,
+    // so "Coming up" works across New Year.
+    const t = todayParts();
+    await Promise.all([syncTime(), loadYear(t.year), loadYear(t.year + 1)]);
+
+    tick();
+    renderMonth();
+    renderSheet(false);
+    renderUpcoming();
+
+    setInterval(syncTime, CONFIG.TIME_RESYNC_MS);
+}
+
+/* Scroll karne par clock chhota ho jaye */
+const clockBand = document.querySelector(".clockband");
+
+window.addEventListener("scroll", () => {
+    // do alag limit rakhi hain taaki upar-neeche hone par jhatka na aaye
+    if (window.scrollY > 160) {
+        clockBand.classList.add("compact");
+    } else if (window.scrollY < 60) {
+        clockBand.classList.remove("compact");
+    }
+}, { passive: true });
+
+start();

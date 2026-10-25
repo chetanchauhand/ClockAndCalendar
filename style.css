@@ -1,1402 +1,560 @@
 /* =====================================================
-   INDIA LIVE CLOCK + FESTIVAL CALENDAR
-   CSS ONLY
+   India Time & Calendar
+   Idea: the tear-off wall calendar found in Indian homes
+   and shops. Sundays and public holidays are printed red.
+
+   Fonts: Rozha One (big numerals, headings), Hind (text).
+   Both cover Devanagari, so Hindi names sit naturally
+   next to English ones.
    ===================================================== */
 
-
-/* ================= CSS VARIABLES ================= */
-
 :root {
+    --ink: #16233b;
+    --ink-soft: #2a3b5e;
+    --page: #e6eaf0;
+    --paper: #fffdf8;
+    --red: #c42b2b;
+    --marigold: #f0a30a;
+    --text: #1d2433;
+    --muted: #5f6b7e;
+    --line: #d5dae3;
 
-    --primary: #ff6b00;
-    --primary-dark: #e85d00;
+    --c-hindu: #e8710a;
+    --c-muslim: #1f8a4c;
+    --c-sikh: #c99a06;
+    --c-christian: #3b5fb0;
+    --c-national: #c42b2b;
+    --c-other: #7a4fc4;
 
-    --secondary: #138808;
-
-    --accent: #000080;
-
-    --background: #f5f7fb;
-    --card: #ffffff;
-
-    --text: #172033;
-    --muted: #697386;
-
-    --border: #e5e9f0;
-
-    --shadow:
-        0 15px 40px rgba(25, 35, 60, 0.08);
-
-    --radius: 20px;
-
-    --transition: 0.25s ease;
+    --display: "Rozha One", "Hind", serif;
+    --body: "Hind", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
-
-/* ================= RESET ================= */
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-
-html {
-    scroll-behavior: smooth;
-}
-
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-
-    font-family:
-        "ubuntu",
-        
-        sans-serif;
-
-    background:
-        linear-gradient(
-            135deg,
-            #f8fafc,
-            #eef3f9
-        );
-
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.5;
     color: var(--text);
-
+    background: var(--page);
     min-height: 100vh;
 }
 
+button { font: inherit; color: inherit; cursor: pointer; }
 
-
-/* ================= HEADER ================= */
-
-.site-header {
-
-    width: 100%;
-
-    padding:
-        18px
-        max(5vw, 24px);
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    gap: 20px;
-
-    background: rgba(255, 255, 255, 0.92);
-
-    border-bottom:
-        1px solid var(--border);
-
-    position: sticky;
-
-    top: 0;
-
-    z-index: 100;
-
-    backdrop-filter: blur(12px);
+:focus-visible {
+    outline: 3px solid var(--marigold);
+    outline-offset: 2px;
 }
 
+/* ---------- Top bar ---------- */
 
-.brand {
-
+.topbar {
     display: flex;
-
+    flex-wrap: wrap;
     align-items: center;
+    justify-content: space-between;
+    gap: 8px 24px;
+    padding: 14px max(4vw, 20px);
+    background: var(--ink);
+    color: #fff;
+}
 
+.topbar h1 {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 1.35rem;
+}
+
+.api-status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    list-style: none;
+    font-size: 0.82rem;
+    color: #b9c3d8;
+}
+
+.api-status li::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 7px;
+    border-radius: 50%;
+    background: var(--marigold);
+}
+
+.api-status li[data-state="ok"]::before  { background: #4cc27a; }
+.api-status li[data-state="off"]::before { background: #7c88a0; }
+
+/* ---------- Clock band ---------- */
+
+.clockband {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px 40px;
+    padding: 28px max(4vw, 20px) 34px;
+    background: var(--ink-soft);
+    color: #fff;
+    border-bottom: 6px solid var(--marigold);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    transition: padding 0.2s ease;
+}
+
+.clock {
+    display: flex;
+    align-items: baseline;
     gap: 14px;
 }
 
-
-.brand-icon {
-
-    width: 48px;
-    height: 48px;
-
-    display: grid;
-
-    place-items: center;
-
-    font-size: 27px;
-
-    border-radius: 14px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #fff2e6,
-            #e9f7e7
-        );
+.digits {
+    display: flex;
+    font-family: var(--display);
+    font-size: clamp(3.2rem, 11vw, 7.5rem);
+    line-height: 1;
 }
 
-
-.brand h1 {
-
-    font-size: 21px;
-
-    font-weight: 750;
-
-    line-height: 1.2;
+/* every digit gets the same width so the clock never jitters */
+.digits span {
+    display: inline-block;
+    width: 0.66em;
+    text-align: center;
 }
 
+.digits .colon { width: 0.3em; color: var(--marigold); }
 
-.brand p {
+.meridiem {
+    font-size: clamp(1.1rem, 3vw, 1.7rem);
+    font-weight: 600;
+    color: var(--marigold);
+}
 
-    color: var(--muted);
+.clock-date { text-align: right; }
 
-    font-size: 13px;
+.clock-hindi {
+    font-family: var(--display);
+    font-size: clamp(1.4rem, 3.4vw, 2rem);
+    line-height: 1.3;
+}
 
+.clock-english { font-size: 1.05rem; }
+
+.clock-zone {
     margin-top: 4px;
+    font-size: 0.85rem;
+    color: #b9c3d8;
 }
 
+/* ---------- Layout ---------- */
 
-.header-badge {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 8px;
-
-    padding: 8px 13px;
-
-    border-radius: 30px;
-
-    background: #eef8ee;
-
-    color: var(--secondary);
-
-    font-size: 12px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.5px;
+.layout {
+    display: grid;
+    grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+    gap: 40px;
+    align-items: start;
+    width: min(1160px, 92%);
+    margin: 40px auto 0;
 }
 
+/* ---------- Tear-off sheet ---------- */
 
-.status-dot {
-
-    width: 8px;
-    height: 8px;
-
-    border-radius: 50%;
-
-    background: #20a33a;
-
-    animation: pulse 1.6s infinite;
+.sheet {
+    position: sticky;
+    top: 100px;
+    margin-bottom: 14px;
+    background: var(--paper);
+    border-radius: 3px 3px 0 0;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1), 0 24px 30px -22px rgba(22, 35, 59, 0.65);
+    transform-origin: top center;
 }
 
-
-/* ================= MAIN CONTAINER ================= */
-
-.container {
-
-    width: min(1180px, 92%);
-
-    margin: 35px auto 60px;
-}
-
-
-/* ================= CLOCK ================= */
-
-.clock-card {
-
-    position: relative;
-
-    overflow: hidden;
-
-    padding: 34px;
-
-    border-radius: var(--radius);
-
-    background:
-        linear-gradient(
-            135deg,
-            #ffffff,
-            #f9fbff
-        );
-
-    border: 1px solid var(--border);
-
-    box-shadow: var(--shadow);
-
-    margin-bottom: 28px;
-}
-
-
-.clock-card::before {
-
+/* torn paper edge */
+.sheet::after {
     content: "";
-
     position: absolute;
-
-    top: 0;
     left: 0;
-
-    width: 100%;
-    height: 5px;
-
+    right: 0;
+    bottom: -12px;
+    height: 12px;
     background:
-        linear-gradient(
-            90deg,
-            var(--primary) 0 33%,
-            white 33% 66%,
-            var(--secondary) 66%
-        );
+        linear-gradient(135deg, var(--paper) 25%, transparent 25%) -6px 0 / 12px 12px,
+        linear-gradient(225deg, var(--paper) 25%, transparent 25%) -6px 0 / 12px 12px;
 }
 
+.sheet.turn { animation: turn-page 0.38s ease-out; }
 
-.clock-top {
+@keyframes turn-page {
+    from { transform: perspective(900px) rotateX(-14deg); opacity: 0.55; }
+    to   { transform: none; opacity: 1; }
+}
 
+.sheet-band {
+    position: relative;
     display: flex;
-
-    align-items: flex-start;
-
+    align-items: baseline;
     justify-content: space-between;
-
-    gap: 20px;
+    padding: 30px 24px 12px;
+    background: var(--red);
+    color: #fff;
+    border-radius: 3px 3px 0 0;
 }
 
+/* the two punched binding holes */
+.sheet-band::before,
+.sheet-band::after {
+    content: "";
+    position: absolute;
+    top: 9px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--page);
+    box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.35);
+}
+.sheet-band::before { left: 22%; }
+.sheet-band::after  { right: 22%; }
 
-.section-label {
-
-    color: var(--muted);
-
-    font-size: 11px;
-
-    font-weight: 800;
-
-    letter-spacing: 1.4px;
-
-    margin-bottom: 7px;
+.sheet-month {
+    font-family: var(--display);
+    font-size: 1.7rem;
 }
 
+.sheet-year { font-weight: 500; }
 
-.clock-top h2 {
+.sheet-body { padding: 14px 24px 34px; text-align: center; }
 
-    font-size: 21px;
+.sheet-day {
+    font-family: var(--display);
+    font-size: clamp(6.5rem, 18vw, 9.5rem);
+    line-height: 1.05;
+    color: var(--ink);
 }
 
+.sheet-day.is-red { color: var(--red); }
 
-.timezone-badge {
-
-    padding: 8px 13px;
-
-    border-radius: 10px;
-
-    background: #f0f3f8;
-
-    color: var(--muted);
-
-    font-size: 12px;
-
+.sheet-weekday {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    font-size: 1.2rem;
     font-weight: 600;
 }
 
+.sheet-weekday [lang="hi"] { color: var(--muted); font-weight: 500; }
 
-/* ================= DIGITAL CLOCK ================= */
-
-.digital-clock {
-
-    margin-top: 30px;
-
-    text-align: center;
-
-    font-family:
-        "Courier New",
-        monospace;
-
-    font-size:
-        clamp(52px, 10vw, 104px);
-
-    font-weight: 800;
-
-    letter-spacing: 5px;
-
-    line-height: 1;
-
-    color: #111827;
-
-    text-shadow:
-        0 3px 20px
-        rgba(0, 0, 0, 0.08);
-}
-
-
-.am-pm {
-
-    text-align: center;
-
-    margin-top: 14px;
-
-    color: var(--primary);
-
-    font-size: 17px;
-
-    font-weight: 800;
-
-    letter-spacing: 2px;
-}
-
-
-/* ================= DATE INFORMATION ================= */
-
-.date-information {
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(4, 1fr);
-
-    gap: 14px;
-
-    margin-top: 32px;
-}
-
-
-.date-item {
-
-    padding: 16px;
-
-    text-align: center;
-
-    border-radius: 14px;
-
-    background: #f7f9fc;
-
-    border: 1px solid var(--border);
-
-    transition:
-        transform var(--transition),
-        box-shadow var(--transition);
-}
-
-
-.date-item:hover {
-
-    transform: translateY(-3px);
-
-    box-shadow:
-        0 8px 20px
-        rgba(25, 35, 60, 0.08);
-}
-
-
-.date-label {
-
-    display: block;
-
+.sheet-relative {
+    margin-top: 2px;
+    font-size: 0.92rem;
     color: var(--muted);
-
-    font-size: 10px;
-
-    font-weight: 800;
-
-    letter-spacing: 1px;
-
-    margin-bottom: 6px;
 }
 
-
-.date-item strong {
-
-    font-size: 15px;
-}
-
-
-.clock-footer {
-
-    display: flex;
-
-    justify-content: center;
-
-    align-items: center;
-
-    gap: 7px;
-
-    color: var(--muted);
-
-    font-size: 13px;
-
+.sheet-festivals {
     margin-top: 22px;
+    text-align: left;
 }
 
+.festival {
+    padding: 14px 0 14px 14px;
+    border-top: 1px solid var(--line);
+    border-left: 4px solid var(--cat, var(--c-other));
+    margin-top: -1px;
+    padding-left: 14px;
+}
 
-/* ================= CALENDAR SECTION ================= */
+.festival h3 {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 1.3rem;
+    line-height: 1.25;
+}
 
-.calendar-section {
+.festival .tag {
+    display: inline-block;
+    margin: 4px 0 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--cat, var(--c-other));
+}
 
+.festival p {
+    font-size: 0.93rem;
+    color: var(--muted);
+}
+
+.no-festival {
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--muted);
+}
+
+/* ---------- Month ---------- */
+
+.month {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 22px 22px 18px;
+}
+
+.month-head {
     display: grid;
-
-    grid-template-columns:
-        minmax(0, 1.55fr)
-        minmax(320px, 0.85fr);
-
-    gap: 25px;
-
-    align-items: start;
-}
-
-
-.calendar-card,
-.details-card {
-
-    background: var(--card);
-
-    border: 1px solid var(--border);
-
-    border-radius: var(--radius);
-
-    box-shadow: var(--shadow);
-}
-
-
-/* ================= CALENDAR ================= */
-
-.calendar-card {
-
-    padding: 25px;
-}
-
-
-.calendar-header {
-
-    display: grid;
-
-    grid-template-columns: 45px 1fr 45px;
-
+    grid-template-columns: 44px 1fr 44px;
     align-items: center;
-
     gap: 10px;
 }
 
+.month-title { text-align: center; }
 
-.calendar-title {
-
-    text-align: center;
+.month-title h2 {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 1.9rem;
+    line-height: 1.15;
 }
 
-
-.calendar-title h2 {
-
-    font-size: 25px;
-
-    line-height: 1.1;
-}
-
-
-.calendar-title span {
-
-    display: block;
-
-    color: var(--muted);
-
-    font-size: 14px;
-
-    margin-top: 4px;
-}
-
-
-.calendar-nav {
-
-    width: 42px;
-    height: 42px;
-
-    border: 1px solid var(--border);
-
-    background: white;
-
-    border-radius: 12px;
-
-    cursor: pointer;
-
-    font-size: 18px;
-
-    color: var(--text);
-
-    transition:
-        background var(--transition),
-        color var(--transition),
-        transform var(--transition);
-}
-
-
-.calendar-nav:hover {
-
-    background: var(--primary);
-
-    color: white;
-
-    transform: scale(1.05);
-}
-
-
-.today-button {
-
-    display: block;
-
-    margin: 18px auto 22px;
-
-    border: none;
-
-    background:
-        linear-gradient(
-            135deg,
-            var(--primary),
-            var(--primary-dark)
-        );
-
-    color: white;
-
-    padding: 9px 18px;
-
-    border-radius: 25px;
-
-    font-weight: 700;
-
-    cursor: pointer;
-
-    transition:
-        transform var(--transition),
-        box-shadow var(--transition);
-}
-
-
-.today-button:hover {
-
-    transform: translateY(-2px);
-
-    box-shadow:
-        0 7px 18px
-        rgba(255, 107, 0, 0.25);
-}
-
-
-/* ================= WEEKDAYS ================= */
-
-.weekdays {
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(7, 1fr);
-
-    gap: 5px;
-
-    margin-bottom: 7px;
-}
-
-
-.weekdays div {
-
-    text-align: center;
-
-    color: var(--muted);
-
-    font-size: 12px;
-
-    font-weight: 800;
-
-    padding: 9px 2px;
-}
-
-
-/* ================= CALENDAR GRID ================= */
-
-.calendar-grid {
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(7, 1fr);
-
-    gap: 6px;
-}
-
-
-.calendar-day {
-
-    position: relative;
-
-    min-height: 75px;
-
-    padding: 9px 7px;
-
-    border-radius: 12px;
-
-    border: 1px solid transparent;
-
-    background: #fafbfc;
-
-    cursor: pointer;
-
-    transition:
-        transform var(--transition),
-        background var(--transition),
-        border var(--transition),
-        box-shadow var(--transition);
-}
-
-
-.calendar-day:hover {
-
-    transform: translateY(-2px);
-
-    border-color: #d9dee8;
-
-    background: white;
-
-    box-shadow:
-        0 6px 16px
-        rgba(20, 30, 50, 0.08);
-}
-
-
-.calendar-day.empty {
-
-    background: transparent;
-
-    cursor: default;
-}
-
-
-.calendar-day.empty:hover {
-
-    transform: none;
-
-    border-color: transparent;
-
-    box-shadow: none;
-}
-
-
-.day-number {
-
-    display: inline-grid;
-
-    place-items: center;
-
-    width: 29px;
-    height: 29px;
-
+.month-title p { color: var(--muted); font-size: 0.95rem; }
+
+.nav-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1.7rem;
+    line-height: 1;
+    background: none;
+    border: 1px solid var(--line);
     border-radius: 50%;
-
-    font-size: 13px;
-
-    font-weight: 700;
 }
 
+.nav-btn:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
 
-.today .day-number {
+.month-tools { text-align: center; margin: 10px 0 14px; }
 
-    color: white;
-
-    background:
-        linear-gradient(
-            135deg,
-            var(--primary),
-            var(--primary-dark)
-        );
-
-    box-shadow:
-        0 4px 12px
-        rgba(255, 107, 0, 0.3);
+.today-btn {
+    padding: 6px 16px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background: none;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
 }
 
+.today-btn:hover { background: var(--ink); color: #fff; }
 
-.selected-date {
-
-    border:
-        2px solid var(--accent);
+.weekdays,
+.grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
 }
 
+.weekdays span {
+    padding: 6px 0;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+}
 
-.calendar-festival-dot {
+.weekdays .sun { color: var(--red); }
 
+.day {
+    position: relative;
+    min-height: 78px;
+    padding: 7px 8px;
+    text-align: left;
+    background: #f7f8fb;
+    border: 2px solid transparent;
+    border-radius: 4px;
+}
+
+.day:hover { background: #fff; border-color: var(--line); }
+
+.day.blank { background: none; border: none; cursor: default; }
+
+.day .num {
+    display: inline-grid;
+    place-items: center;
+    min-width: 28px;
+    height: 28px;
+    font-weight: 600;
+    border-radius: 50%;
+}
+
+/* printed-calendar rule: Sundays and national holidays are red */
+.day.red .num { color: var(--red); }
+
+.day.today .num { background: var(--marigold); color: var(--ink); }
+
+.day.selected { border-color: var(--ink); background: #fff; }
+
+.day .dots { display: flex; gap: 3px; margin: 4px 0 0 4px; }
+
+.day .dots i {
     width: 7px;
     height: 7px;
-
     border-radius: 50%;
-
-    margin-top: 8px;
-
-    background: var(--primary);
-
-    box-shadow:
-        0 0 0 3px rgba(255, 107, 0, 0.12);
 }
 
-
-.festival-name-small {
-
+.day .name {
     display: block;
-
-    margin-top: 5px;
-
+    margin-top: 3px;
     overflow: hidden;
-
     white-space: nowrap;
-
     text-overflow: ellipsis;
-
+    font-size: 0.72rem;
+    line-height: 1.3;
     color: var(--muted);
-
-    font-size: 9px;
-
-    font-weight: 700;
 }
 
+.c-hindu,     .dots .c-hindu     { background: var(--c-hindu); }
+.c-muslim,    .dots .c-muslim    { background: var(--c-muslim); }
+.c-sikh,      .dots .c-sikh      { background: var(--c-sikh); }
+.c-christian, .dots .c-christian { background: var(--c-christian); }
+.c-national,  .dots .c-national  { background: var(--c-national); }
+.c-other,     .dots .c-other     { background: var(--c-other); }
 
-/* ================= DETAILS CARD ================= */
-
-.details-card {
-
-    padding: 25px;
-
-    position: sticky;
-
-    top: 100px;
-}
-
-
-.details-heading {
-
+.legend {
     display: flex;
-
-    align-items: center;
-
-    gap: 13px;
-
-    padding-bottom: 20px;
-
-    border-bottom: 1px solid var(--border);
-}
-
-
-.details-icon {
-
-    width: 45px;
-    height: 45px;
-
-    display: grid;
-
-    place-items: center;
-
-    border-radius: 13px;
-
-    background: #fff2e6;
-
-    font-size: 22px;
-}
-
-
-.details-heading h2 {
-
-    font-size: 19px;
-}
-
-
-/* ================= SELECTED DATE ================= */
-
-.selected-date-box {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 15px;
-
-    padding: 18px 0;
-
-    border-bottom: 1px solid var(--border);
-}
-
-
-.big-date {
-
-    width: 62px;
-    height: 62px;
-
-    display: grid;
-
-    place-items: center;
-
-    border-radius: 16px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #fff2e6,
-            #fff8f2
-        );
-
-    color: var(--primary);
-
-    font-size: 28px;
-
-    font-weight: 800;
-}
-
-
-.selected-date-box strong {
-
-    display: block;
-
-    font-size: 15px;
-}
-
-
-.selected-date-box p {
-
-    color: var(--muted);
-
-    font-size: 12px;
-
-    margin-top: 5px;
-}
-
-
-/* ================= FESTIVAL DETAILS ================= */
-
-.festival-details {
-
-    padding-top: 20px;
-}
-
-
-.festival-details h3 {
-
-    font-size: 15px;
-
-    margin-bottom: 15px;
-}
-
-
-.festival-item {
-
-    padding: 15px;
-
-    border-radius: 13px;
-
-    background: #f8fafc;
-
-    border: 1px solid var(--border);
-
-    margin-bottom: 10px;
-
-    animation: fadeIn 0.25s ease;
-}
-
-
-.festival-item h4 {
-
-    font-size: 15px;
-
-    margin-bottom: 7px;
-}
-
-
-.festival-meta {
-
-    display: flex;
-
     flex-wrap: wrap;
-
-    gap: 7px;
-
-    margin-bottom: 9px;
+    gap: 6px 18px;
+    margin-top: 16px;
+    padding-top: 14px;
+    list-style: none;
+    border-top: 1px solid var(--line);
+    font-size: 0.85rem;
+    color: var(--muted);
 }
 
-
-.festival-tag {
-
+.legend i {
     display: inline-block;
-
-    padding: 4px 8px;
-
-    border-radius: 20px;
-
-    background: #edf1f6;
-
-    color: var(--muted);
-
-    font-size: 10px;
-
-    font-weight: 700;
-}
-
-
-.festival-date {
-
-    color: var(--primary);
-
-    font-size: 11px;
-
-    font-weight: 700;
-}
-
-
-.festival-item p {
-
-    color: var(--muted);
-
-    font-size: 12px;
-
-    line-height: 1.6;
-}
-
-
-.empty-state {
-
-    padding: 25px 10px;
-
-    text-align: center;
-
-    color: var(--muted);
-}
-
-
-.empty-state span {
-
-    display: block;
-
-    font-size: 30px;
-
-    margin-bottom: 10px;
-}
-
-
-.empty-state p {
-
-    font-size: 13px;
-
-    line-height: 1.5;
-}
-
-
-/* ================= LEGEND ================= */
-
-.legend-card {
-
-    margin-top: 25px;
-
-    padding: 22px 25px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    gap: 20px;
-
-    background: white;
-
-    border: 1px solid var(--border);
-
-    border-radius: var(--radius);
-
-    box-shadow: var(--shadow);
-}
-
-
-.legend-title h2 {
-
-    font-size: 17px;
-}
-
-
-.legend-title p {
-
-    color: var(--muted);
-
-    font-size: 12px;
-
-    margin-top: 4px;
-}
-
-
-.legend-items {
-
-    display: flex;
-
-    flex-wrap: wrap;
-
-    justify-content: flex-end;
-
-    gap: 12px 17px;
-}
-
-
-.legend-item {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 6px;
-
-    color: var(--muted);
-
-    font-size: 11px;
-
-    font-weight: 600;
-}
-
-
-.legend-dot {
-
     width: 9px;
     height: 9px;
-
+    margin-right: 6px;
     border-radius: 50%;
 }
 
+/* ---------- Upcoming ---------- */
 
-.hindu {
-    background: #ff7a00;
+.upcoming {
+    width: min(1160px, 92%);
+    margin: 44px auto 0;
 }
 
-.muslim {
-    background: #149447;
+.upcoming h2 {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 1.6rem;
+    margin-bottom: 14px;
 }
 
-.sikh {
-    background: #e4aa00;
+.upcoming-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 14px;
+    list-style: none;
 }
 
-.christian {
-    background: #4267b2;
+.upcoming-item {
+    display: block;
+    width: 100%;
+    padding: 14px 16px;
+    text-align: left;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--cat, var(--c-other));
+    border-radius: 4px;
 }
 
-.national {
-    background: #e33c3c;
+.upcoming-item:hover { background: var(--paper); }
+
+.upcoming-item strong {
+    display: block;
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 1.15rem;
+    line-height: 1.25;
 }
 
-.other {
-    background: #8b5cf6;
-}
+.upcoming-item span { display: block; font-size: 0.9rem; color: var(--muted); }
 
+.upcoming-item .when { margin-top: 6px; color: var(--text); font-weight: 600; }
 
-/* ================= NOTICE ================= */
-
-.notice-card {
-
-    display: flex;
-
-    gap: 13px;
-
-    margin-top: 20px;
-
-    padding: 18px;
-
-    border-radius: 15px;
-
-    background: #f0f6ff;
-
-    border: 1px solid #dce9fa;
-
-    color: #334155;
-}
-
-
-.notice-icon {
-
-    font-size: 20px;
-}
-
-
-.notice-card strong {
-
-    font-size: 13px;
-}
-
-
-.notice-card p {
-
-    margin-top: 5px;
-
-    font-size: 11px;
-
-    line-height: 1.6;
-
+.fine-print {
+    width: min(1160px, 92%);
+    margin: 36px auto 0;
+    font-size: 0.85rem;
     color: var(--muted);
+    max-width: 70ch;
 }
 
+/* ---------- Footer ---------- */
 
-/* ================= FOOTER ================= */
-
-.site-footer {
-
-    padding: 25px;
-
+.footer {
+    margin-top: 48px;
+    padding: 26px 20px;
     text-align: center;
-
-    color: var(--muted);
-
-    border-top: 1px solid var(--border);
-
-    background: white;
-
-    font-size: 12px;
+    background: var(--ink);
+    color: #b9c3d8;
+    font-size: 0.88rem;
 }
 
+.footer p:first-child { color: #fff; font-weight: 500; margin-bottom: 2px; }
 
-.site-footer p {
+/* ---------- Responsive ---------- */
 
-    color: var(--text);
-
-    font-weight: 700;
-
-    margin-bottom: 5px;
+@media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; gap: 36px; }
+    .month  { order: 1; }
+    .sheet  { order: 2; position: relative; top: 0; }
+    .clock-date { text-align: left; }
 }
-
-
-/* ================= ANIMATIONS ================= */
-
-@keyframes pulse {
-
-    0% {
-        opacity: 1;
-        transform: scale(1);
-    }
-
-    50% {
-        opacity: 0.45;
-        transform: scale(0.75);
-    }
-
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-
-@keyframes fadeIn {
-
-    from {
-        opacity: 0;
-        transform: translateY(5px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-
-/* ================= TABLET ================= */
-
-@media (max-width: 850px) {
-
-    .calendar-section {
-
-        grid-template-columns: 1fr;
-    }
-
-
-    .details-card {
-
-        position: static;
-    }
-
-
-    .legend-card {
-
-        flex-direction: column;
-
-        align-items: flex-start;
-    }
-
-
-    .legend-items {
-
-        justify-content: flex-start;
-    }
-}
-
-
-/* ================= MOBILE ================= */
 
 @media (max-width: 600px) {
-
-    .site-header {
-
-        padding: 15px;
-    }
-
-
-    .brand h1 {
-
-        font-size: 17px;
-    }
-
-
-    .brand p {
-
-        font-size: 10px;
-    }
-
-
-    .brand-icon {
-
-        width: 40px;
-        height: 40px;
-
-        font-size: 22px;
-    }
-
-
-    .header-badge {
-
-        font-size: 9px;
-
-        padding: 7px 9px;
-    }
-
-
-    .container {
-
-        width: 94%;
-
-        margin-top: 20px;
-    }
-
-
-    .clock-card {
-
-        padding: 23px 16px;
-    }
-
-
-    .clock-top {
-
-        align-items: center;
-    }
-
-
-    .clock-top h2 {
-
-        font-size: 16px;
-    }
-
-
-    .timezone-badge {
-
-        font-size: 9px;
-
-        padding: 7px;
-    }
-
-
-    .digital-clock {
-
-        font-size:
-            clamp(42px, 15vw, 68px);
-
-        letter-spacing: 2px;
-    }
-
-
-    .date-information {
-
-        grid-template-columns:
-            repeat(2, 1fr);
-    }
-
-
-    .calendar-card {
-
-        padding: 15px 10px;
-    }
-
-
-    .calendar-title h2 {
-
-        font-size: 20px;
-    }
-
-
-    .calendar-day {
-
-        min-height: 55px;
-
-        padding: 5px 4px;
-    }
-
-
-    .day-number {
-
-        width: 25px;
-        height: 25px;
-
-        font-size: 11px;
-    }
-
-
-    .festival-name-small {
-
-        display: none;
-    }
-
-
-    .calendar-festival-dot {
-
-        margin-top: 6px;
-    }
-
-
-    .weekdays div {
-
-        font-size: 10px;
-    }
-
-
-    .legend-items {
-
-        gap: 10px;
-    }
+    .month { padding: 16px 10px 14px; }
+    .grid, .weekdays { gap: 3px; }
+    .day { min-height: 54px; padding: 4px; }
+    .day .name { display: none; }
+    .day .num { min-width: 24px; height: 24px; font-size: 0.85rem; }
+    .day .dots { margin-left: 2px; }
 }
 
+@media (prefers-reduced-motion: reduce) {
+    .sheet.turn { animation: none; }
+}
 
-/* ================= SMALL MOBILE ================= */
+/* ---------- Compact clock (scroll karne par) ---------- */
 
-@media (max-width: 400px) {
+.clockband.compact {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    align-items: center;
+    border-bottom-width: 3px;
+}
 
-    .header-badge {
+.clockband.compact .digits {
+    font-size: clamp(1.8rem, 6vw, 2.6rem);
+}
 
-        display: none;
-    }
+.clockband.compact .meridiem {
+    font-size: 1rem;
+}
 
+.clockband.compact .clock-hindi {
+    font-size: 1.1rem;
+}
 
-    .clock-top {
+.clockband.compact .clock-english,
+.clockband.compact .clock-zone {
+    display: none;
+}
 
-        flex-direction: column;
-
-        align-items: flex-start;
-    }
-
-
-    .timezone-badge {
-
-        align-self: flex-start;
-    }
-
-
-    .calendar-nav {
-
-        width: 37px;
-        height: 37px;
-    }
-
-
-    .calendar-header {
-
-        grid-template-columns:
-            38px 1fr 38px;
-    }
+@media (max-width: 600px) {
+    .clockband.compact .clock-date { display: none; }
 }

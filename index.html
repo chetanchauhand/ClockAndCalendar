@@ -2,329 +2,122 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Live Indian Standard Time and a calendar of Indian festivals and holidays.">
+    <title>India Time & Calendar</title>
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Rozha+One&display=swap" rel="stylesheet">
 
-    <meta name="description"
-          content="Indian Standard Time live clock and Indian festival calendar">
-
-    <title>India Live Clock & Festival Calendar</title>
-     
-    
-    <!-- External CSS -->
     <link rel="stylesheet" href="style.css">
-
 </head>
 
 <body>
 
-    <!-- ================= HEADER ================= -->
-    <header class="site-header">
+    <header class="topbar">
+        <h1>India Time &amp; Calendar</h1>
 
-        <div class="brand">
-            <div class="brand-icon">🇮🇳</div>
-
-            <div>
-                <h1>India Time & Calendar</h1>
-                <p>Indian Standard Time • Festivals • Important Days</p>
-            </div>
-        </div>
-
-        <div class="header-badge">
-            <span class="status-dot"></span>
-            LIVE IST
-        </div>
-
+        <ul class="api-status" aria-label="Data sources">
+            <li id="timeStatus" data-state="warn">Syncing time</li>
+            <li id="holidayStatus" data-state="warn">Loading festivals</li>
+        </ul>
     </header>
 
+    <main>
 
-    <!-- ================= MAIN ================= -->
-    <main class="container">
-
-        <!-- ================= CLOCK ================= -->
-        <section class="clock-card">
-
-            <div class="clock-top">
-
-                <div>
-                    <p class="section-label">CURRENT INDIAN TIME</p>
-
-                    <h2>
-                        <span id="clockIndia">🇮🇳</span>
-                        India Standard Time
-                    </h2>
-                </div>
-
-                <div class="timezone-badge">
-                    Delhi, India • IST
-                </div>
-
+        <!-- ===== Live clock ===== -->
+        <section class="clockband" aria-label="Current time in India">
+            <div class="clock">
+                <div class="digits" id="digits" role="timer" aria-live="off">00:00:00</div>
+                <span class="meridiem" id="meridiem">AM</span>
             </div>
 
-
-            <div class="digital-clock" id="digitalClock">
-                00:00:00
+            <div class="clock-date">
+                <p class="clock-hindi" id="todayHindi" lang="hi"></p>
+                <p class="clock-english" id="todayEnglish"></p>
+                <p class="clock-zone">Indian Standard Time, UTC+5:30</p>
             </div>
-
-
-            <div class="am-pm" id="ampm">
-                AM
-            </div>
-
-
-            <div class="date-information">
-
-                <div class="date-item">
-                    <span class="date-label">DAY</span>
-                    <strong id="currentDay">Monday</strong>
-                </div>
-
-                <div class="date-item">
-                    <span class="date-label">DATE</span>
-                    <strong id="currentDate">01</strong>
-                </div>
-
-                <div class="date-item">
-                    <span class="date-label">MONTH</span>
-                    <strong id="currentMonth">January</strong>
-                </div>
-
-                <div class="date-item">
-                    <span class="date-label">YEAR</span>
-                    <strong id="currentYear">2026</strong>
-                </div>
-
-            </div>
-
-            <div class="clock-footer">
-                <span>🕐</span>
-                <span id="fullIndianDate">
-                    Indian Standard Time
-                </span>
-            </div>
-
         </section>
 
+        <div class="layout">
 
-        <!-- ================= CALENDAR ================= -->
-        <section class="calendar-section">
+            <!-- ===== Tear-off sheet for the selected date ===== -->
+            <article class="sheet" id="sheet" aria-live="polite">
+                <div class="sheet-band">
+                    <span class="sheet-month" id="sheetMonth"></span>
+                    <span class="sheet-year" id="sheetYear"></span>
+                </div>
 
-            <div class="calendar-card">
+                <div class="sheet-body">
+                    <div class="sheet-day" id="sheetDay">1</div>
 
-                <!-- Calendar Header -->
-                <div class="calendar-header">
+                    <p class="sheet-weekday">
+                        <span id="sheetWeekdayEn"></span>
+                        <span lang="hi" id="sheetWeekdayHi"></span>
+                    </p>
+                    <p class="sheet-relative" id="sheetRelative"></p>
 
-                    <button
-                        class="calendar-nav"
-                        id="previousMonth"
-                        aria-label="Previous month">
-                        &#10094;
-                    </button>
+                    <div class="sheet-festivals" id="festivalContent"></div>
+                </div>
+            </article>
 
+            <!-- ===== Month grid ===== -->
+            <section class="month" aria-label="Calendar">
+                <div class="month-head">
+                    <button class="nav-btn" id="previousMonth" aria-label="Previous month">&#8249;</button>
 
-                    <div class="calendar-title">
-
-                        <h2 id="calendarMonth">
-                            January
-                        </h2>
-
-                        <span id="calendarYear">
-                            2026
-                        </span>
-
+                    <div class="month-title">
+                        <h2><span id="calendarMonth"></span> <span id="calendarYear"></span></h2>
+                        <p lang="hi" id="calendarMonthHi"></p>
                     </div>
 
-
-                    <button
-                        class="calendar-nav"
-                        id="nextMonth"
-                        aria-label="Next month">
-                        &#10095;
-                    </button>
-
+                    <button class="nav-btn" id="nextMonth" aria-label="Next month">&#8250;</button>
                 </div>
 
-
-                <button class="today-button" id="todayButton">
-                    Today
-                </button>
-
-
-                <!-- Week Days -->
-                <div class="weekdays">
-
-                    <div>Sun</div>
-                    <div>Mon</div>
-                    <div>Tue</div>
-                    <div>Wed</div>
-                    <div>Thu</div>
-                    <div>Fri</div>
-                    <div>Sat</div>
-
+                <div class="month-tools">
+                    <button class="today-btn" id="todayButton">Go to today</button>
                 </div>
 
-
-                <!-- Calendar Days -->
-                <div
-                    class="calendar-grid"
-                    id="calendarGrid">
+                <div class="weekdays" aria-hidden="true">
+                    <span class="sun">Sun</span><span>Mon</span><span>Tue</span><span>Wed</span>
+                    <span>Thu</span><span>Fri</span><span>Sat</span>
                 </div>
 
-            </div>
+                <div class="grid" id="calendarGrid"></div>
 
+                <ul class="legend">
+                    <li><i class="c-hindu"></i>Hindu</li>
+                    <li><i class="c-muslim"></i>Muslim</li>
+                    <li><i class="c-sikh"></i>Sikh</li>
+                    <li><i class="c-christian"></i>Christian</li>
+                    <li><i class="c-national"></i>National</li>
+                    <li><i class="c-other"></i>Other</li>
+                </ul>
+            </section>
 
-            <!-- ================= INFORMATION PANEL ================= -->
-            <aside class="details-card">
+        </div>
 
-                <div class="details-heading">
-                    <span class="details-icon">📅</span>
-
-                    <div>
-                        <p class="section-label">SELECTED DATE</p>
-                        <h2 id="selectedDateTitle">
-                            Select a date
-                        </h2>
-                    </div>
-                </div>
-
-
-                <div class="selected-date-box">
-
-                    <div class="big-date"
-                         id="selectedDayNumber">
-                        —
-                    </div>
-
-                    <div>
-                        <strong id="selectedWeekday">
-                            Select a date
-                        </strong>
-
-                        <p id="selectedFullDate">
-                            Click any date in the calendar.
-                        </p>
-                    </div>
-
-                </div>
-
-
-                <div class="festival-details">
-
-                    <h3>Festival / Occasion</h3>
-
-                    <div id="festivalContent">
-
-                        <div class="empty-state">
-                            <span>🎉</span>
-
-                            <p>
-                                Select a date to see its
-                                festivals and important occasions.
-                            </p>
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </aside>
-
+        <!-- ===== Upcoming ===== -->
+        <section class="upcoming" aria-label="Upcoming festivals">
+            <h2>Coming up</h2>
+            <ol class="upcoming-list" id="upcomingList"></ol>
         </section>
 
-
-        <!-- ================= FESTIVAL LEGEND ================= -->
-        <section class="legend-card">
-
-            <div class="legend-title">
-                <h2>Festival Categories</h2>
-
-                <p>
-                    Indian festivals and important occasions
-                </p>
-            </div>
-
-
-            <div class="legend-items">
-
-                <div class="legend-item">
-                    <span class="legend-dot hindu"></span>
-                    Hindu
-                </div>
-
-                <div class="legend-item">
-                    <span class="legend-dot muslim"></span>
-                    Muslim
-                </div>
-
-                <div class="legend-item">
-                    <span class="legend-dot sikh"></span>
-                    Sikh
-                </div>
-
-                <div class="legend-item">
-                    <span class="legend-dot christian"></span>
-                    Christian
-                </div>
-
-                <div class="legend-item">
-                    <span class="legend-dot national"></span>
-                    National
-                </div>
-
-                <div class="legend-item">
-                    <span class="legend-dot other"></span>
-                    Other
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= NOTE ================= -->
-        <section class="notice-card">
-
-            <span class="notice-icon">ℹ️</span>
-
-            <div>
-
-                <strong>Festival date note</strong>
-
-                <p>
-                    Hindu, Islamic and other lunar-calendar
-                    festivals can change from year to year.
-                    This website uses a year-specific dataset
-                    rather than assuming that movable festivals
-                    always fall on the same Gregorian date.
-                    Islamic dates may vary by local moon sighting.
-                </p>
-
-            </div>
-
-        </section>
+        <p class="fine-print">
+            Festival dates come from a holiday API and are saved in your browser for a week.
+            If the API can't be reached, a built-in list is shown instead. Lunar and Islamic
+            dates can shift by a day with local moon sighting.
+        </p>
 
     </main>
 
-
-    <!-- ================= FOOTER ================= -->
-    <footer class="site-footer">
-
-        <p>
-            🇮🇳 India Time & Calendar
-        </p>
-
-        <span>
-            Live time based on Asia/Kolkata
-        </span>
-        <p  
-        class="designer">Created & Designed by Chetan Chauhan
-        </p>
+    <footer class="footer">
+        <p>Created and designed by Chetan Chauhan</p>
+        <p>Time is always shown for Asia/Kolkata, whatever your device's timezone is.</p>
     </footer>
 
-
-    <!-- External JavaScript -->
+    <script src="festival-data.js"></script>
     <script src="script.js"></script>
-
 </body>
 </html>
